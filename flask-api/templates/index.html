@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Interface back office Chessplorer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px auto;
+      max-width: 800px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 30px;
+      margin-bottom: 10px;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin-bottom: 10px;
+    }
+    a {
+      text-decoration: none;
+      color: #007BFF;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Interface back office Chessplorer</h1>
+  <main>
+    <h2>Gestion des questions</h2>
+    <ul>
+      <li><a href="/admin/questions">📝 Liste des questions FAQ</a></li>
+      <li><a href="/admin/questions/new">➕ Ajouter une question FAQ</a></li>
+      <li><a href="/api/questions">📡 Voir l'API JSON des questions</a></li>
+    </ul>
+
+    <h2>Gestion des ressources</h2>
+    <ul>
+      <li><a href="/ressources/ressource/new">➕ Ajouter une ressource</a></li>
+      <li><a href="/ressources/">📚 Liste des ressources</a></li>
+    </ul>
+  </main>
+</body>
+</html>

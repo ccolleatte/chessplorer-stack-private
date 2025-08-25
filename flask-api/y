@@ -1,0 +1,60 @@
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return "Hello from Flask!"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+nano app.py
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import psycopg2
+import os
+
+app = Flask(__name__)
+CORS(app)
+
+conn = psycopg2.connect(
+    dbname=os.getenv("DB_NAME"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASS"),
+    host=os.getenv("DB_HOST"),
+    port=os.getenv("DB_PORT", 5432)
+)
+
+@app.route("/api/questions", methods=["GET"])
+def get_questions():
+    with conn.cursor() as cur:
+        cur.execute("SELECT id, question, source, niveau, theme, intention, frequence, reponse FROM question ORDER BY id DESC")
+        rows = cur.fetchall()
+        cols = ["id", "question", "source", "niveau", "theme", "intention", "frequence", "reponse"]
+        return jsonify([dict(zip(cols, row)) for row in rows])
+
+@app.route("/api/questions", methods=["POST"])
+def add_or_update_question():
+    data = request.get_json()
+    with conn.cursor() as cur:
+        if data.get("id"):
+            cur.execute("""
+                UPDATE question SET
+                    question=%s, source=%s, niveau=%s, theme=%s, intention=%s,
+                    frequence=%s, reponse=%s WHERE id=%s
+            """, (
+                data["question"], data["source"], data["niveau"], data["theme"],
+                data["intention"], data["frequence"], data["reponse"], data["id"]
+            ))
+        else:
+            cur.execute("""
+                INSERT INTO question (question, source, niveau, theme, intention, frequence, reponse)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                data["question"], data["source"], data["niveau"], data["theme"],
+                data["intention"], data["frequence"], data["reponse"]
+            ))
+        conn.commit()
+    return ("", 204)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

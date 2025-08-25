@@ -1,0 +1,9 @@
+        Name                       Command                  State                             Ports                       
+--------------------------------------------------------------------------------------------------------------------------
+chessplorer-flask-api   python app.py                    Up             0.0.0.0:5000->5000/tcp,:::5000->5000/tcp          
+chessplorer-flowise     flowise start                    Up (healthy)   0.0.0.0:3000->3000/tcp,:::3000->3000/tcp          
+chessplorer-mem0-api    ./wait-for-qdrant.sh uvico ...   Up             0.0.0.0:8000->8000/tcp,:::8000->8000/tcp          
+chessplorer-mem0-ui     /home/nextjs/entrypoint.sh ...   Up             3000/tcp                                          
+chessplorer-n8n         tini -- /docker-entrypoint.sh    Up (healthy)   0.0.0.0:5678->5678/tcp,:::5678->5678/tcp          
+chessplorer-postgres    docker-entrypoint.sh postgres    Up (healthy)   0.0.0.0:5432->5432/tcp,:::5432->5432/tcp          
+chessplorer-qdrant      ./entrypoint.sh                  Up             0.0.0.0:6333->6333/tcp,:::6333->6333/tcp, 6334/tcp

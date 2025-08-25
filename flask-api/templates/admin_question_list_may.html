@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Admin - Questions</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.75em; border: 1px solid #ccc; vertical-align: top; }
+    th { background-color: #f2f2f2; }
+    .actions a { margin-right: 10px; }
+    code { font-size: 0.85em; color: #444; background: #f9f9f9; padding: 2px 4px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<style>
+  form { display: inline; margin: 0; padding: 0; }
+</style>
+
+  <h1>Questions – Administration</h1>
+  <p><a href="/admin/questions/new">➕ Ajouter une question</a></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Texte</th>
+        <th>Réponse</th>
+        <th>Niveau</th>
+        <th>Thème</th>
+        <th>Sous-thème</th>
+        <th>Source</th>
+        <th>Tonalité</th>
+        <th>Style</th>
+        <th>Validée par</th>
+        <th>Créée le</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for q in questions %}
+      <tr>
+        <td>{{ q.id }}</td>
+        <td>{{ q.texte }}</td>
+        <td>{{ q.reponse or "—" }}</td>
+        <td>{{ q.niveau_min }}–{{ q.niveau_max }}</td>
+        <td>{{ q.theme or "—" }}</td>
+        <td>{{ q.subtheme or "—" }}</td>
+        <td>{{ q.source or "—" }}</td>
+        <td>{{ q.tonalite or "—" }}</td>
+        <td>{% if q.style_tag %}<code>{{ q.style_tag }}</code>{% else %}—{% endif %}</td>
+        <td>{{ q.validated_by or "—" }}</td>
+        <td>{{ q.created_at.strftime('%Y-%m-%d') }}</td>
+        <td class="actions">
+          <a href="/admin/questions/{{ q.id }}/edit">✏️ Modifier</a>
+          <form method="POST" action="/admin/questions/{{ q.id }}/delete" onsubmit="return confirm('Supprimer cette question ?');">
+            <button type="submit">🗑️</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Modifier une question</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px auto;
+      max-width: 800px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      font-size: 24px;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 10px;
+    }
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    textarea {
+      resize: vertical;
+    }
+    fieldset {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    legend {
+      font-weight: bold;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #007BFF;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>✏️ Modifier une question</h1>
+
+  <form method="post">
+    <label>Texte :
+      <textarea name="texte" rows="4" required>{{ question.texte }}</textarea>
+    </label>
+
+    <label>Réponse :
+      <textarea name="reponse" rows="3">{{ question.reponse or '' }}</textarea>
+    </label>
+
+    <label>Niveau min : <input type="number" name="niveau_min" value="{{ question.niveau_min }}"></label>
+    <label>Niveau max : <input type="number" name="niveau_max" value="{{ question.niveau_max }}"></label>
+    <label>Thème : <input type="text" name="theme" value="{{ question.theme or '' }}"></label>
+    <label>Sous-thème : <input type="text" name="subtheme" value="{{ question.subtheme or '' }}"></label>
+    <label>Source : <input type="text" name="source" value="{{ question.source or '' }}"></label>
+
+    <label>Aliases (liste séparée par point-virgule ou sauts de ligne) :
+      <textarea name="aliases" rows="2">{{ question.aliases or '' }}</textarea>
+    </label>
+
+    <fieldset>
+      <legend>Réponses par niveau :</legend>
+      <label>0–1200 :
+        <textarea name="reponses_0_1200" rows="2">{{ question.reponses['0_1200'] if question.reponses else '' }}</textarea>
+      </label>
+      <label>1200–1600 :
+        <textarea name="reponses_1200_1600" rows="2">{{ question.reponses['1200_1600'] if question.reponses else '' }}</textarea>
+      </label>
+      <label>1600+ :
+        <textarea name="reponses_1600_plus" rows="2">{{ question.reponses['1600_plus'] if question.reponses else '' }}</textarea>
+      </label>
+    </fieldset>
+
+    <label>Style tags (séparés par virgule) :
+      <input type="text" name="style_tag" value="{{ question.style_tag | join(', ') if question.style_tag else '' }}">
+    </label>
+
+    <label>Tonalité : <input type="text" name="tonalite" value="{{ question.tonalite or '' }}"></label>
+    <label>Validée par : <input type="text" name="validated_by" value="{{ question.validated_by or '' }}"></label>
+
+    <button type="submit">💾 Enregistrer</button>
+  </form>
+
+  <p><a href="/admin/questions">← Retour</a></p>
+</body>
+</html>

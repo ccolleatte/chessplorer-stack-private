@@ -1,0 +1,15 @@
+{% extends "videos/base.html" %}
+
+{% block content %}
+  <h1>Accueil du module vidéos</h1>
+  <p>Bienvenue sur l’interface de gestion des vidéos importées.</p>
+
+  <ul>
+    <li><a href="{{ url_for('list_videos') }}">📺 Liste des vidéos</a> — toutes les vidéos importées, triées par date, avec auteur et score</li>
+    <li><a href="{{ url_for('list_auteurs') }}">👤 Liste des auteurs</a> — les auteurs référencés dans la base, avec leur score moyen</li>
+    <li><strong>🔍 Zoom vidéo</strong> — accessible depuis la liste des vidéos (page dédiée à chaque vidéo)</li>
+    <li><strong>✏️ Édition auteur</strong> — accessible depuis la liste des auteurs (formulaire d’édition d’un auteur)</li>
+  </ul>
+
+  <p>⚙️ Tu peux enrichir ce module depuis les routes Flask existantes ou en ajoutant de nouveaux templates dans ce répertoire.</p>
+{% endblock %}

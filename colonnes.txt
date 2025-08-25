@@ -1,0 +1,257 @@
+         table_name         |      column_name       |          data_type          
+----------------------------+------------------------+-----------------------------
+ annotation_tag_entity      | id                     | character varying
+ annotation_tag_entity      | name                   | character varying
+ annotation_tag_entity      | createdAt              | timestamp with time zone
+ annotation_tag_entity      | updatedAt              | timestamp with time zone
+ auth_identity              | userId                 | uuid
+ auth_identity              | providerId             | character varying
+ auth_identity              | providerType           | character varying
+ auth_identity              | createdAt              | timestamp with time zone
+ auth_identity              | updatedAt              | timestamp with time zone
+ auth_provider_sync_history | id                     | integer
+ auth_provider_sync_history | providerType           | character varying
+ auth_provider_sync_history | runMode                | text
+ auth_provider_sync_history | status                 | text
+ auth_provider_sync_history | startedAt              | timestamp with time zone
+ auth_provider_sync_history | endedAt                | timestamp with time zone
+ auth_provider_sync_history | scanned                | integer
+ auth_provider_sync_history | created                | integer
+ auth_provider_sync_history | updated                | integer
+ auth_provider_sync_history | disabled               | integer
+ auth_provider_sync_history | error                  | text
+ credentials_entity         | name                   | character varying
+ credentials_entity         | data                   | text
+ credentials_entity         | type                   | character varying
+ credentials_entity         | createdAt              | timestamp with time zone
+ credentials_entity         | updatedAt              | timestamp with time zone
+ credentials_entity         | id                     | character varying
+ credentials_entity         | isManaged              | boolean
+ event_destinations         | id                     | uuid
+ event_destinations         | destination            | jsonb
+ event_destinations         | createdAt              | timestamp with time zone
+ event_destinations         | updatedAt              | timestamp with time zone
+ execution_annotation_tags  | annotationId           | integer
+ execution_annotation_tags  | tagId                  | character varying
+ execution_annotations      | id                     | integer
+ execution_annotations      | executionId            | integer
+ execution_annotations      | vote                   | character varying
+ execution_annotations      | note                   | text
+ execution_annotations      | createdAt              | timestamp with time zone
+ execution_annotations      | updatedAt              | timestamp with time zone
+ execution_data             | executionId            | integer
+ execution_data             | workflowData           | json
+ execution_data             | data                   | text
+ execution_entity           | id                     | integer
+ execution_entity           | finished               | boolean
+ execution_entity           | mode                   | character varying
+ execution_entity           | retryOf                | character varying
+ execution_entity           | retrySuccessId         | character varying
+ execution_entity           | startedAt              | timestamp with time zone
+ execution_entity           | stoppedAt              | timestamp with time zone
+ execution_entity           | waitTill               | timestamp with time zone
+ execution_entity           | status                 | character varying
+ execution_entity           | workflowId             | character varying
+ execution_entity           | deletedAt              | timestamp with time zone
+ execution_entity           | createdAt              | timestamp with time zone
+ execution_metadata         | id                     | integer
+ execution_metadata         | executionId            | integer
+ execution_metadata         | key                    | character varying
+ execution_metadata         | value                  | text
+ folder                     | id                     | character varying
+ folder                     | name                   | character varying
+ folder                     | parentFolderId         | character varying
+ folder                     | projectId              | character varying
+ folder                     | createdAt              | timestamp with time zone
+ folder                     | updatedAt              | timestamp with time zone
+ folder_tag                 | folderId               | character varying
+ folder_tag                 | tagId                  | character varying
+ insights_by_period         | id                     | integer
+ insights_by_period         | metaId                 | integer
+ insights_by_period         | type                   | integer
+ insights_by_period         | value                  | integer
+ insights_by_period         | periodUnit             | integer
+ insights_by_period         | periodStart            | timestamp with time zone
+ insights_metadata          | metaId                 | integer
+ insights_metadata          | workflowId             | character varying
+ insights_metadata          | projectId              | character varying
+ insights_metadata          | workflowName           | character varying
+ insights_metadata          | projectName            | character varying
+ insights_raw               | id                     | integer
+ insights_raw               | metaId                 | integer
+ insights_raw               | type                   | integer
+ insights_raw               | value                  | integer
+ insights_raw               | timestamp              | timestamp with time zone
+ installed_nodes            | name                   | character varying
+ installed_nodes            | type                   | character varying
+ installed_nodes            | latestVersion          | integer
+ installed_nodes            | package                | character varying
+ installed_packages         | packageName            | character varying
+ installed_packages         | installedVersion       | character varying
+ installed_packages         | authorName             | character varying
+ installed_packages         | authorEmail            | character varying
+ installed_packages         | createdAt              | timestamp with time zone
+ installed_packages         | updatedAt              | timestamp with time zone
+ invalid_auth_token         | token                  | character varying
+ invalid_auth_token         | expiresAt              | timestamp with time zone
+ migrations                 | id                     | integer
+ migrations                 | timestamp              | bigint
+ migrations                 | name                   | character varying
+ processed_data             | workflowId             | character varying
+ processed_data             | context                | character varying
+ processed_data             | createdAt              | timestamp with time zone
+ processed_data             | updatedAt              | timestamp with time zone
+ processed_data             | value                  | text
+ project                    | id                     | character varying
+ project                    | name                   | character varying
+ project                    | type                   | character varying
+ project                    | createdAt              | timestamp with time zone
+ project                    | updatedAt              | timestamp with time zone
+ project                    | icon                   | json
+ project_relation           | projectId              | character varying
+ project_relation           | userId                 | uuid
+ project_relation           | role                   | character varying
+ project_relation           | createdAt              | timestamp with time zone
+ project_relation           | updatedAt              | timestamp with time zone
+ question                   | id                     | integer
+ question                   | texte                  | text
+ question                   | niveau_min             | integer
+ question                   | niveau_max             | integer
+ question                   | theme                  | character varying
+ question                   | source                 | character varying
+ question                   | created_at             | timestamp without time zone
+ question                   | reponse                | text
+ ressource                  | id                     | integer
+ ressource                  | titre                  | text
+ ressource                  | type_ressource         | character varying
+ ressource                  | url                    | text
+ ressource                  | format                 | text
+ ressource                  | auteur                 | text
+ ressource                  | langue                 | character varying
+ ressource                  | duree_etude            | integer
+ ressource                  | categorie_tactique     | character varying
+ ressource                  | annee_creation         | integer
+ ressource                  | validee                | boolean
+ ressource                  | elo_min                | integer
+ ressource                  | elo_max                | integer
+ role                       | id                     | integer
+ role                       | name                   | character varying
+ role                       | scope                  | character varying
+ role                       | createdAt              | timestamp with time zone
+ role                       | updatedAt              | timestamp with time zone
+ settings                   | key                    | character varying
+ settings                   | value                  | text
+ settings                   | loadOnStartup          | boolean
+ shared_credentials         | credentialsId          | character varying
+ shared_credentials         | projectId              | character varying
+ shared_credentials         | role                   | text
+ shared_credentials         | createdAt              | timestamp with time zone
+ shared_credentials         | updatedAt              | timestamp with time zone
+ shared_workflow            | workflowId             | character varying
+ shared_workflow            | projectId              | character varying
+ shared_workflow            | role                   | text
+ shared_workflow            | createdAt              | timestamp with time zone
+ shared_workflow            | updatedAt              | timestamp with time zone
+ tag_entity                 | name                   | character varying
+ tag_entity                 | createdAt              | timestamp with time zone
+ tag_entity                 | updatedAt              | timestamp with time zone
+ tag_entity                 | id                     | character varying
+ test_case_execution        | id                     | character varying
+ test_case_execution        | testRunId              | character varying
+ test_case_execution        | pastExecutionId        | integer
+ test_case_execution        | executionId            | integer
+ test_case_execution        | evaluationExecutionId  | integer
+ test_case_execution        | status                 | character varying
+ test_case_execution        | runAt                  | timestamp with time zone
+ test_case_execution        | completedAt            | timestamp with time zone
+ test_case_execution        | errorCode              | character varying
+ test_case_execution        | errorDetails           | json
+ test_case_execution        | metrics                | json
+ test_case_execution        | createdAt              | timestamp with time zone
+ test_case_execution        | updatedAt              | timestamp with time zone
+ test_definition            | name                   | character varying
+ test_definition            | workflowId             | character varying
+ test_definition            | evaluationWorkflowId   | character varying
+ test_definition            | annotationTagId        | character varying
+ test_definition            | createdAt              | timestamp with time zone
+ test_definition            | updatedAt              | timestamp with time zone
+ test_definition            | description            | text
+ test_definition            | id                     | character varying
+ test_definition            | mockedNodes            | json
+ test_metric                | id                     | character varying
+ test_metric                | name                   | character varying
+ test_metric                | testDefinitionId       | character varying
+ test_metric                | createdAt              | timestamp with time zone
+ test_metric                | updatedAt              | timestamp with time zone
+ test_run                   | id                     | character varying
+ test_run                   | testDefinitionId       | character varying
+ test_run                   | status                 | character varying
+ test_run                   | runAt                  | timestamp with time zone
+ test_run                   | completedAt            | timestamp with time zone
+ test_run                   | metrics                | json
+ test_run                   | createdAt              | timestamp with time zone
+ test_run                   | updatedAt              | timestamp with time zone
+ test_run                   | totalCases             | integer
+ test_run                   | passedCases            | integer
+ test_run                   | failedCases            | integer
+ test_run                   | errorCode              | character varying
+ test_run                   | errorDetails           | text
+ user                       | id                     | uuid
+ user                       | email                  | character varying
+ user                       | firstName              | character varying
+ user                       | lastName               | character varying
+ user                       | password               | character varying
+ user                       | personalizationAnswers | json
+ user                       | createdAt              | timestamp with time zone
+ user                       | updatedAt              | timestamp with time zone
+ user                       | settings               | json
+ user                       | disabled               | boolean
+ user                       | mfaEnabled             | boolean
+ user                       | mfaSecret              | text
+ user                       | mfaRecoveryCodes       | text
+ user                       | role                   | text
+ user_api_keys              | id                     | character varying
+ user_api_keys              | userId                 | uuid
+ user_api_keys              | label                  | character varying
+ user_api_keys              | apiKey                 | character varying
+ user_api_keys              | createdAt              | timestamp with time zone
+ user_api_keys              | updatedAt              | timestamp with time zone
+ variables                  | key                    | character varying
+ variables                  | type                   | character varying
+ variables                  | value                  | character varying
+ variables                  | id                     | character varying
+ webhook_entity             | webhookPath            | character varying
+ webhook_entity             | method                 | character varying
+ webhook_entity             | node                   | character varying
+ webhook_entity             | webhookId              | character varying
+ webhook_entity             | pathLength             | integer
+ webhook_entity             | workflowId             | character varying
+ workflow_entity            | name                   | character varying
+ workflow_entity            | active                 | boolean
+ workflow_entity            | nodes                  | json
+ workflow_entity            | connections            | json
+ workflow_entity            | createdAt              | timestamp with time zone
+ workflow_entity            | updatedAt              | timestamp with time zone
+ workflow_entity            | settings               | json
+ workflow_entity            | staticData             | json
+ workflow_entity            | pinData                | json
+ workflow_entity            | versionId              | character
+ workflow_entity            | triggerCount           | integer
+ workflow_entity            | id                     | character varying
+ workflow_entity            | meta                   | json
+ workflow_entity            | parentFolderId         | character varying
+ workflow_history           | versionId              | character varying
+ workflow_history           | workflowId             | character varying
+ workflow_history           | authors                | character varying
+ workflow_history           | createdAt              | timestamp with time zone
+ workflow_history           | updatedAt              | timestamp with time zone
+ workflow_history           | nodes                  | json
+ workflow_history           | connections            | json
+ workflow_statistics        | count                  | integer
+ workflow_statistics        | latestEvent            | timestamp with time zone
+ workflow_statistics        | name                   | character varying
+ workflow_statistics        | workflowId             | character varying
+ workflows_tags             | workflowId             | character varying
+ workflows_tags             | tagId                  | character varying
+(253 rows)
+

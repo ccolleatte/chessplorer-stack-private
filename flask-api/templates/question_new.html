@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Nouvelle question</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em auto;
+      max-width: 800px;
+      line-height: 1.5;
+    }
+    label {
+      display: block;
+      margin-bottom: 1.2em;
+    }
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 0.5em;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    button {
+      padding: 0.6em 1.2em;
+      font-size: 1rem;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>➕ Ajouter une nouvelle question</h1>
+
+  <form method="post">
+    <label>Texte :
+      <textarea name="texte" required></textarea>
+    </label>
+
+    <label>Niveau minimum :
+      <input type="number" name="niveau_min" required>
+    </label>
+
+    <label>Niveau maximum :
+      <input type="number" name="niveau_max" required>
+    </label>
+
+    <label>Thème :
+      <input type="text" name="theme">
+    </label>
+
+    <label>Sous-thème :
+      <input type="text" name="subtheme">
+    </label>
+
+    <label>Source :
+      <input type="text" name="source">
+    </label>
+
+    <label>Réponse (générale) :
+      <textarea name="reponse"></textarea>
+    </label>
+
+    <fieldset>
+      <legend>Réponses par niveau :</legend>
+      <label>0–1200 :
+        <textarea name="reponses_0_1200"></textarea>
+      </label>
+      <label>1200–1600 :
+        <textarea name="reponses_1200_1600"></textarea>
+      </label>
+      <label>1600+ :
+        <textarea name="reponses_1600_plus"></textarea>
+      </label>
+    </fieldset>
+
+    <label>Aliases (JSON ou liste simple) :
+      <textarea name="aliases"></textarea>
+    </label>
+
+    <label>Style tag (séparés par virgule) :
+      <input type="text" name="style_tag">
+    </label>
+
+    <label>Tonalité :
+      <input type="text" name="tonalite">
+    </label>
+
+    <label>Validée par :
+      <input type="text" name="validated_by">
+    </label>
+
+    <button type="submit">💾 Enregistrer</button>
+  </form>
+
+  <p><a href="/admin/questions">⬅️ Retour à la liste</a></p>
+</body>
+</html>

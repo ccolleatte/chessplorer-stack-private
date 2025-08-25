@@ -1,0 +1,95 @@
+n8n.chessplorer.com {
+        reverse_proxy chessplorer-n8n:5678
+}
+
+monitoring.chessplorer.com {
+        reverse_proxy uptime-kuma:3001
+}
+
+qdrant.chessplorer.com {
+        reverse_proxy qdrant:6333
+}
+
+front.chessplorer.com {
+        route {
+                basic_auth / {
+                        cyrilsen $2a$14$0sKI3lSFGamKII4q3Ntfi.JltTdZdF6ac2pKITuSATZl1tHhd9goC
+                }
+                reverse_proxy chessplorer-flask-api:5000
+        }
+}
+
+api.chessplorer.com {
+        route {
+                basic_auth / {
+                        cyrilsen $2a$14$0sKI3lSFGamKII4q3Ntfi.JltTdZdF6ac2pKITuSATZl1tHhd9goC
+                }
+                reverse_proxy flask-api:5000
+        }
+}
+
+nextcloud.chessplorer.com {
+        reverse_proxy chessplorer-nextcloud:80
+        encode gzip
+        header {
+                Strict-Transport-Security "max-age=15552000; includeSubDomains; preload"
+                Referrer-Policy "no-referrer"
+                X-Content-Type-Options "nosniff"
+                X-Frame-Options "SAMEORIGIN"
+                X-XSS-Protection "1; mode=block"
+        }
+        file_server
+}
+
+videos.chessplorer.com {
+    reverse_proxy chessplorer-flask-api:5000
+}
+
+# SUPABASE - Routage avec réécriture d'URL
+supabase.chessplorer.com {
+  encode gzip
+
+  # --- auth (GoTrue) — versionné uniquement
+  handle_path /auth/v1/* { reverse_proxy chessplorer-supabase-auth:9999 }
+
+  # --- rest (PostgREST) — versionné uniquement
+  handle_path /rest/v1/* { reverse_proxy chessplorer-supabase-rest:3000 }
+
+  # --- meta (postgres-meta)
+  handle_path /meta/*    { reverse_proxy chessplorer-supabase-meta:8080 }
+  handle_path /pg-meta/* { reverse_proxy chessplorer-supabase-meta:8080 }
+
+  # --- CORS minimal
+  @cors_preflight method OPTIONS
+  handle @cors_preflight {
+    header Access-Control-Allow-Origin "*"
+    header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    header Access-Control-Allow-Headers "Content-Type, Authorization, apikey, x-client-info"
+    respond "" 204
+  }
+  header { Access-Control-Allow-Origin "*" }
+
+  # --- défaut : Studio
+  handle { reverse_proxy chessplorer-supabase-studio:3000 }
+}
+
+
+
+
+
+
+
+flowise.chessplorer.com {
+    reverse_proxy chessplorer-flowise:3000
+}
+
+# MEM0 - Simple et direct
+mem0.chessplorer.com {
+    reverse_proxy chessplorer-mem0-cole-medin:8501
+    
+    header {
+        Cache-Control "no-cache, no-store, must-revalidate"
+        Pragma "no-cache"
+        Expires "0"
+    }
+}

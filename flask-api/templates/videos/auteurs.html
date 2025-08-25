@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Auteurs – Chessplorer{% endblock %}
+
+{% block content %}
+<h2>Liste des auteurs</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Score moyen</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for auteur in auteurs.items %}
+        <tr>
+            <td>{{ auteur.nom }}</td>
+            <td>{{ '%.2f'|format(auteur.score_moyen or 0) }}</td>
+            <td>
+                <a href="{{ url_for('edit_auteur', id=auteur.id) }}">✏️ Modifier</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if not auteurs.items %}
+    <p>Aucun auteur trouvé.</p>
+{% endif %}
+
+<nav>
+    <ul class="pagination">
+        {% if auteurs.page > 1 %}
+            <li><a href="{{ url_for('list_auteurs', page=auteurs.page - 1) }}">← Précédent</a></li>
+        {% endif %}
+        <li>Page {{ auteurs.page }} / {{ (auteurs.total // auteurs.per_page) + (1 if auteurs.total % auteurs.per_page > 0 else 0) }}</li>
+        {% if auteurs.has_next %}
+            <li><a href="{{ url_for('list_auteurs', page=auteurs.page + 1) }}">Suivant →</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}

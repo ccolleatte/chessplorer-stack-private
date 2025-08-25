@@ -1,0 +1,85 @@
+n8n.chessplorer.com {
+        reverse_proxy chessplorer-n8n:5678
+}
+
+monitoring.chessplorer.com {
+        reverse_proxy uptime-kuma:3001
+}
+
+qdrant.chessplorer.com {
+        reverse_proxy qdrant:6333
+}
+
+front.chessplorer.com {
+        route {
+                basicauth / {
+                        cyrilsen $2a$14$0sKI3lSFGamKII4q3Ntfi.JltTdZdF6ac2pKITuSATZl1tHhd9goC # password: monmotdepasse
+                }
+                reverse_proxy chessplorer-flask-api:5000
+        }
+}
+
+api.chessplorer.com {
+        route {
+                basicauth / {
+                        cyrilsen $2a$14$0sKI3lSFGamKII4q3Ntfi.JltTdZdF6ac2pKITuSATZl1tHhd9goC # password: monmotdepasse
+                }
+                reverse_proxy flask-api:5000
+        }
+}
+
+nextcloud.chessplorer.com {
+        reverse_proxy chessplorer-nextcloud:80
+
+        encode gzip
+        header {
+                Strict-Transport-Security "max-age=15552000; includeSubDomains; preload"
+                Referrer-Policy "no-referrer"
+                X-Content-Type-Options "nosniff"
+                X-Frame-Options "SAMEORIGIN"
+                X-XSS-Protection "1; mode=block"
+        }
+
+        file_server
+}
+
+
+videos.chessplorer.com {
+    reverse_proxy chessplorer-flask-api:5000
+}
+
+supabase.chessplorer.com {
+    reverse_proxy chessplorer-supabase-studio:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+    
+    # Headers spécifiques Supabase
+    header {
+        Access-Control-Allow-Origin *
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        Access-Control-Allow-Headers "Content-Type, Authorization, apikey, x-client-info"
+    }
+}
+
+# Ajoutez cette ligne aussi dans le Caddyfile
+:9999 {
+        reverse_proxy chessplorer-flowise:3000
+}
+
+# Gardez aussi votre ligne existante :
+flowise.chessplorer.com {
+    reverse_proxy chessplorer-flowise:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+
+mem0.chessplorer.com {
+        reverse_proxy chessplorer-mem0-streamlit:8501
+}

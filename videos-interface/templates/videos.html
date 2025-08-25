@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Vidéos – Chessplorer{% endblock %}
+
+{% block content %}
+<h2>Liste des vidéos</h2>
+
+<form method="get" action="{{ url_for('list_videos') }}">
+    <label for="source_id">Filtrer par compte source :</label>
+    <select name="source_id" id="source_id" onchange="this.form.submit()">
+        <option value="">— Toutes les sources —</option>
+        {% for source in sources %}
+            <option value="{{ source.id }}" {% if selected_source == source.id|string %}selected{% endif %}>
+                {{ source.nom }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Titre</th>
+            <th>Auteur</th>
+            <th>Score</th>
+            <th>YouTube</th>
+            <th>Détail</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for video in videos %}
+            <tr>
+                <td>{{ video.titre }}</td>
+                <td>{{ video.auteur_nom or '–' }}</td>
+                <td>{{ '%.2f'|format(video.score_utilite or 0) }}</td>
+                <td>
+                    <a class="video-icon" href="https://www.youtube.com/watch?v={{ video.youtube_id }}" target="_blank" title="Voir sur YouTube">📺</a>
+                </td>
+                <td>
+                    <a class="video-icon" href="{{ url_for('zoom_video', id=video.id) }}" title="Voir détails">🔍</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if not videos %}
+    <p>Aucune vidéo à afficher pour cette source.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,127 @@
+import os
+import psycopg2
+import time
+import logging
+
+def wait_for_postgres(max_attempts=30):
+    """Attendre que PostgreSQL soit prêt"""
+    for attempt in range(max_attempts):
+        try:
+            conn = psycopg2.connect(
+                host='chessplorer-supabase-db',
+                port=5432,
+                database='postgres',
+                user='supabase_auth_admin',
+                password='supabase_auth_password'
+            )
+            conn.close()
+            print("✅ PostgreSQL prêt")
+            return True
+        except psycopg2.OperationalError:
+            print(f"⏳ Attente PostgreSQL... ({attempt+1}/{max_attempts})")
+            time.sleep(2)
+    
+    print("❌ Timeout PostgreSQL")
+    return False
+
+def ensure_vecs_tables():
+    """Vérifie et crée SEULEMENT les tables manquantes - PRÉSERVE TOUTES LES DONNÉES"""
+    try:
+        if not wait_for_postgres():
+            return False
+            
+        conn = psycopg2.connect(
+            host='chessplorer-supabase-db',
+            port=5432,
+            database='postgres',
+            user='supabase_auth_admin',
+            password='supabase_auth_password'
+        )
+        cur = conn.cursor()
+        
+        print("🔧 Vérification tables vecs (préservation données)...")
+        
+        # Extension pgvector
+        cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        
+        # Schéma vecs
+        cur.execute("CREATE SCHEMA IF NOT EXISTS vecs;")
+        
+        # Tables vecs - SEULEMENT SI ELLES N'EXISTENT PAS
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS vecs._meta (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            );
+        """)
+        
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS vecs.collections (
+                name TEXT PRIMARY KEY,
+                dimension INTEGER NOT NULL,
+                is_index_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+        """)
+        
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS vecs.memories (
+                id BIGSERIAL PRIMARY KEY,
+                vec vector(1536),
+                metadata JSONB
+            );
+        """)
+        
+        # Index vectoriel
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS memories_vec_idx 
+            ON vecs.memories USING hnsw (vec vector_cosine_ops);
+        """)
+        
+        # Métadonnées - SEULEMENT SI PAS DÉJÀ PRÉSENTES
+        cur.execute("""
+            INSERT INTO vecs._meta (key, value) VALUES 
+            ('version', '0.4.5'),
+            ('created_at', NOW()::TEXT)
+            ON CONFLICT (key) DO NOTHING;
+        """)
+        
+        # Collection memories - SEULEMENT SI PAS DÉJÀ PRÉSENTE
+        cur.execute("""
+            INSERT INTO vecs.collections (name, dimension) VALUES ('memories', 1536) 
+            ON CONFLICT (name) DO NOTHING;
+        """)
+        
+        # Permissions
+        cur.execute("""
+            GRANT ALL ON SCHEMA vecs TO supabase_auth_admin;
+            GRANT ALL ON ALL TABLES IN SCHEMA vecs TO supabase_auth_admin;
+            GRANT ALL ON ALL SEQUENCES IN SCHEMA vecs TO supabase_auth_admin;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA vecs GRANT ALL ON TABLES TO supabase_auth_admin;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA vecs GRANT ALL ON SEQUENCES TO supabase_auth_admin;
+        """)
+        
+        # Vérifier que tout est en place
+        cur.execute("SELECT COUNT(*) FROM vecs._meta;")
+        meta_count = cur.fetchone()[0]
+        
+        cur.execute("SELECT COUNT(*) FROM vecs.collections WHERE name = 'memories';")
+        collection_exists = cur.fetchone()[0]
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        print(f"✅ Tables vecs vérifiées - Meta: {meta_count}, Collections: {collection_exists}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erreur setup vecs: {e}")
+        return False
+
+if __name__ == "__main__":
+    success = ensure_vecs_tables()
+    if not success:
+        print("❌ Échec initialisation vecs")
+        exit(1)
+    print("🎉 Vecs initialisé avec succès")

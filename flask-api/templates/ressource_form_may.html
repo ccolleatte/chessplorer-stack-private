@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier' if ressource else 'Nouvelle' }} ressource{% endblock %}
+{% block content %}
+  <form method="post" style="max-width: 600px; margin: auto;">
+
+    <fieldset>
+      <legend><strong>📘 Informations générales</strong></legend>
+
+      <label>Titre :<br>
+        <input type="text" name="titre" style="width: 100%" value="{{ ressource['titre'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>Type :<br>
+        <input type="text" name="type_ressource" style="width: 100%" value="{{ ressource['type_ressource'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>URL :<br>
+        <input type="url" name="url" style="width: 100%" value="{{ ressource['url'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>Format :<br>
+        <input type="text" name="format" style="width: 100%" value="{{ ressource['format'] if ressource else '' }}">
+      </label><br><br>
+    </fieldset>
+
+    <fieldset>
+      <legend><strong>✍️ Auteur / édition</strong></legend>
+
+      <label>Auteur :<br>
+        <input type="text" name="auteur" style="width: 100%" value="{{ ressource['auteur'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>Éditeur :<br>
+        <input type="text" name="editeur" style="width: 100%" value="{{ ressource['editeur'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>Langue :<br>
+        <input type="text" name="langue" style="width: 100%" value="{{ ressource['langue'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>Année de publication :<br>
+        <input type="number" name="annee_publication" style="width: 100%" value="{{ ressource['annee_publication'] if ressource else '' }}">
+      </label><br><br>
+    </fieldset>
+
+    <fieldset>
+      <legend><strong>🎯 Ciblage & usage</strong></legend>
+
+      <label>Elo minimum :<br>
+        <input type="number" name="elo_min" style="width: 100%" value="{{ ressource['elo_min'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>Elo maximum :<br>
+        <input type="number" name="elo_max" style="width: 100%" value="{{ ressource['elo_max'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>Durée estimée d'étude (en minutes) :<br>
+        <input type="number" name="duree_etude" style="width: 100%" value="{{ ressource['duree_etude'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>Catégorie tactique :<br>
+        <input type="text" name="categorie_tactique" style="width: 100%" value="{{ ressource['categorie_tactique'] if ressource else '' }}">
+      </label><br><br>
+
+      <label>
+        <input type="checkbox" name="validee" {% if ressource and ressource['validee'] %}checked{% endif %}>
+        Validée
+      </label><br><br>
+    </fieldset>
+
+    <div style="text-align: center;">
+      <button type="submit" style="padding: 0.5em 1em;">💾 Enregistrer</button>
+    </div>
+
+  </form>
+{% endblock %}

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Questions – Administration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px auto;
+      max-width: 1200px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+    a.button {
+      display: inline-block;
+      margin-bottom: 20px;
+      text-decoration: none;
+      color: #5e2ca5;
+      font-weight: bold;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+    .actions a {
+      margin-right: 8px;
+      color: #5e2ca5;
+      text-decoration: none;
+    }
+    .actions a:hover {
+      text-decoration: underline;
+    }
+    .alias-icon {
+      cursor: help;
+    }
+  </style>
+</head>
+<body>
+  <h1>Questions – Administration</h1>
+  <a href="/admin/questions/new" class="button">➕ Ajouter une question</a>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Texte</th>
+        <th>Réponse</th>
+        <th>0–1200</th>
+        <th>1200–1600</th>
+        <th>1600+</th>
+        <th>Niveau</th>
+        <th>Thème</th>
+        <th>Sous-thème</th>
+        <th>Source</th>
+        <th>Tonalité</th>
+        <th>Style</th>
+        <th>Validée par</th>
+        <th>Alias</th>
+        <th>Créée le</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for q in questions %}
+      <tr>
+        <td>{{ q.id }}</td>
+        <td>{{ q.texte }}</td>
+        <td>{{ q.reponse or "—" }}</td>
+        <td>{{ q.reponses.get("0_1200", "—") if q.reponses else "—" }}</td>
+        <td>{{ q.reponses.get("1200_1600", "—") if q.reponses else "—" }}</td>
+        <td>{{ q.reponses.get("1600_plus", "—") if q.reponses else "—" }}</td>
+        <td>{{ q.niveau_min }}–{{ q.niveau_max }}</td>
+        <td>{{ q.theme or "—" }}</td>
+        <td>{{ q.subtheme or "—" }}</td>
+        <td>{{ q.source or "—" }}</td>
+        <td>{{ q.tonalite or "—" }}</td>
+        <td>
+          {% if q.style_tag %}
+            {{ q.style_tag | join(', ') }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ q.validated_by or "—" }}</td>
+        <td>
+          {% if q.aliases_count and q.aliases_count > 0 %}
+            <span class="alias-icon" title="{{ q.aliases_count }} alias associé(s)">🔁</span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ q.created_at.strftime('%Y-%m-%d') }}</td>
+        <td class="actions">
+          <a href="/admin/questions/{{ q.id }}/edit">✏️ Modifier</a>
+          <form method="post" action="/admin/questions/{{ q.id }}/delete" style="display:inline">
+            <button type="submit" style="border:none;background:none;color:#888;cursor:pointer">🗑️</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

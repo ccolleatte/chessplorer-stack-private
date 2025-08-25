@@ -1,0 +1,232 @@
+version: '3.8'
+
+services:
+  # PostgreSQL principal pour Chessplorer
+  postgres:
+    image: postgres:15
+    container_name: chessplorer-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chessdb
+      POSTGRES_USER: chessplorer
+      POSTGRES_PASSWORD: securepass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    command: postgres -c shared_preload_libraries=pg_stat_statements
+
+# Flask API principal
+  flask-api:
+    build:
+      context: ./flask-api
+      dockerfile: Dockerfile
+    container_name: chessplorer-flask-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=chessplorer-postgres
+      - DB_NAME=chessdb
+      - DB_USER=chessplorer
+      - DB_PASS=securepass
+      - DB_PORT=5432
+    volumes:
+      - ./flask-api:/app
+    depends_on:
+      - postgres
+
+# N8N pour l'automatisation
+  n8n:
+    image: n8nio/n8n
+    container_name: chessplorer-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=chessplorer-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=chessdb
+      - DB_POSTGRESDB_USER=chessplorer
+      - DB_POSTGRESDB_PASSWORD=securepass
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=adminpass
+      - N8N_HOST=n8n.chessplorer.com
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.chessplorer.com
+      - GENERIC_TIMEZONE=Europe/Paris
+      - N8N_TRUST_PROXY=true  # ← Ajoutez cette ligne
+      - N8N_RUNNERS_ENABLED=true  # ← Et celle-ci pour éliminer l'autre warning
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+
+# Uptime monitoring
+  uptime-kuma:
+    image: louislam/uptime-kuma
+    container_name: chessplorer-uptime
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime_data:/app/data
+
+  # Supabase PostgreSQL avec pgvector pour Cole Medin
+  supabase-db:
+    image: supabase/postgres:15.1.0.117
+    container_name: chessplorer-supabase-db
+    ports:
+      - "5433:5432"
+    restart: always
+    environment:
+      POSTGRES_USER: supabase_auth_admin
+      POSTGRES_PASSWORD: supabase_auth_password
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+      - ./supabase-init:/docker-entrypoint-initdb.d/
+    command: 
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c" 
+      - "shared_preload_libraries=vector,pg_stat_statements"
+      - "-c"
+      - "max_connections=200"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U supabase_auth_admin -d postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Services Supabase (simplifiés)
+  supabase-auth:
+    image: supabase/gotrue:v2.143.0
+    container_name: chessplorer-supabase-auth
+    restart: unless-stopped
+    environment:
+      # Variables critiques pour GoTrue
+      - API_EXTERNAL_URL=${API_EXTERNAL_URL}
+      - GOTRUE_API_HOST=${GOTRUE_API_HOST}
+      - GOTRUE_API_PORT=${GOTRUE_API_PORT}
+      - GOTRUE_DB_DRIVER=${GOTRUE_DB_DRIVER}
+      - GOTRUE_DB_DATABASE_URL=${GOTRUE_DB_DATABASE_URL}
+      - GOTRUE_SITE_URL=${GOTRUE_SITE_URL}
+      - GOTRUE_JWT_SECRET=${JWT_SECRET}
+      - GOTRUE_DISABLE_SIGNUP=false
+      # Variables additionnelles pour PostgreSQL
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    ports:
+      - "9999:9999"
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.1
+    container_name: chessplorer-supabase-rest
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: ${PGRST_DB_URI}
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.75.0
+    container_name: chessplorer-supabase-meta
+    restart: unless-stopped
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: chessplorer-supabase-db
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: supabase_auth_admin
+      PG_META_DB_PASSWORD: securepass
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8080/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  supabase-studio:
+    image: supabase/studio:latest
+    container_name: chessplorer-supabase-studio
+    restart: unless-stopped
+    ports:
+      - "54321:3000"
+    environment:
+      STUDIO_PG_META_URL: http://chessplorer-supabase-meta:8080
+      STUDIO_PGRST_URL: http://chessplorer-supabase-rest:3000
+      NEXT_PUBLIC_SUPABASE_URL: https://supabase.chessplorer.com
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+    healthcheck:
+      test: ["CMD", "node", "-e", "const h=require('os').hostname(); fetch('http://'+h+':3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 40s
+
+
+  # Cole Medin MCP-Mem0 (seulement celui qui existe)
+  mem0-cole-medin:
+    build:
+      context: ./mem0-cole-medin
+      dockerfile: Dockerfile
+    container_name: chessplorer-mem0-cole-medin
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=postgresql://supabase_auth_admin:supabase_auth_password@chessplorer-supabase-db:5432/postgres
+      - SUPABASE_URL=https://supabase.chessplorer.com
+      - SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoZXNzcGxvcmVyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY3MTAyODgwMCwiZXhwIjoxOTg2NjA0ODAwfQ.example
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./mem0-cole-medin:/app
+      - mem0_data:/app/data
+
+# Caddy pour le reverse proxy
+  caddy:
+    image: caddy:alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+
+
+volumes:
+  postgres_data:
+    driver: local
+  n8n_data:
+    driver: local
+  uptime_data:
+    driver: local
+  supabase_db_data:
+    driver: local
+  mem0_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

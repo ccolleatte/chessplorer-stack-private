@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Chessplorer – Vidéos{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Mini.css (thème clair par défaut) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mini.css@3.0.1/dist/mini-default.min.css">
+
+    <style>
+        .video-icon {
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="logo">Chessplorer</a>
+        <a href="/videos">Vidéos</a>
+        <a href="/auteurs">Auteurs</a>
+    </header>
+
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        Interface autonome Chessplorer – {{ now().year }}
+    </footer>
+</body>
+</html>

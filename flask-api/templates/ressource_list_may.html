@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des ressources{% endblock %}
+
+{% block header %}Liste des ressources{% endblock %}
+
+{% block content %}
+  <a href="{{ url_for('ressource_bp.create_ressource') }}">➕ Nouvelle ressource</a>
+
+  <form method="post" action="{{ url_for('ressource_bp.delete_ressources') }}">
+    <ul>
+      {% for r in ressources %}
+        <li>
+          <input type="checkbox" name="delete_ids" value="{{ r.id }}">
+          <strong>{{ r.titre }}</strong> ({{ r.type_ressource }}) — {{ r.url }}<br>
+          <a href="{{ url_for('ressource_bp.edit_ressource', id=r.id) }}">Modifier</a>
+        </li>
+      {% endfor %}
+    </ul>
+    <button type="submit">🗑️ Supprimer la sélection</button>
+  </form>
+{% endblock %}

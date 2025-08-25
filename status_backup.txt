@@ -1,0 +1,8 @@
+=== SERVICES VALIDÉS ===
+✅ PostgreSQL : healthy
+✅ Qdrant : opérationnel (port 6333)
+✅ Flask-API : HTTP 200 OK
+✅ N8N : HTTP 200 OK (/healthz)
+🟡 Flowise : en cours/unhealthy
+
+PROCHAINE ÉTAPE : Mem0 (mem0-api + mem0-ui)

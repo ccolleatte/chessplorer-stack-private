@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Questions</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background-color: #f2f2f2; }
+    button { margin: 0 2px; }
+  </style>
+</head>
+<body>
+  <h1>Interface d'administration des questions</h1>
+  <div id="pagination-controls"></div>
+  <table id="questions-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Question</th><th>Niveau min</th><th>Niveau max</th>
+        <th>Source</th><th>Thème</th><th>Intention</th><th>Fréquence</th><th>Réponse</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    let currentPage = 1;
+
+    async function fetchQuestions(page = 1) {
+      const res = await fetch(`https://api.chessplorer.com/api/questions_paginated?page=${page}`);
+      const data = await res.json();
+      const tbody = document.querySelector("#questions-table tbody");
+      tbody.innerHTML = "";
+
+      data.questions.forEach(q => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${q.id}</td>
+          <td><input value="${q.question}"></td>
+          <td><input value="${q.niveau_min}"></td>
+          <td><input value="${q.niveau_max}"></td>
+          <td><input value="${q.source}"></td>
+          <td><input value="${q.theme}"></td>
+          <td><input value="${q.intention}"></td>
+          <td><input value="${q.frequence}"></td>
+          <td><input value="${q.reponse}"></td>
+          <td>
+            <button onclick="updateQuestion(${q.id}, this)">💾</button>
+            <button onclick="deleteQuestion(${q.id})">🗑️</button>
+          </td>`;
+        tbody.appendChild(row);
+      });
+
+      const controls = document.getElementById("pagination-controls");
+      controls.innerHTML = "";
+      const totalPages = Math.ceil(data.total / data.per_page);
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        if (i === page) btn.disabled = true;
+        btn.onclick = () => { currentPage = i; fetchQuestions(i); };
+        controls.appendChild(btn);
+      }
+    }
+
+    async function updateQuestion(id, btn) {
+      const row = btn.closest("tr");
+      const inputs = row.querySelectorAll("input");
+      const body = {
+        question: inputs[0].value,
+        niveau_min: inputs[1].value,
+        niveau_max: inputs[2].value,
+        source: inputs[3].value,
+        theme: inputs[4].value,
+        intention: inputs[5].value,
+        frequence: inputs[6].value,
+        reponse: inputs[7].value
+      };
+      const res = await fetch(`https://api.chessplorer.com/api/questions/${id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) alert("Question mise à jour");
+      else alert("Erreur de mise à jour");
+    }
+
+    async function deleteQuestion(id) {
+      if (!confirm("Confirmer la suppression ?")) return;
+      const res = await fetch(`https://api.chessplorer.com/api/questions/${id}`, { method: "DELETE" });
+      if (res.ok) fetchQuestions(currentPage);
+      else alert("Erreur de suppression");
+    }
+
+    fetchQuestions();
+  </script>
+</body>
+</html>

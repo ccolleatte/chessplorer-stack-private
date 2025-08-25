@@ -1,0 +1,3 @@
+n8n.chessplorer.com {
+    reverse_proxy chessplorer-n8n:5678
+}

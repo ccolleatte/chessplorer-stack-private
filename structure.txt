@@ -1,0 +1,57 @@
+                                                      List of relations
+ Schema |               Name                |   Type   |    Owner    | Persistence | Access method |    Size    | Description 
+--------+-----------------------------------+----------+-------------+-------------+---------------+------------+-------------
+ public | annotation_tag_entity             | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | auth_identity                     | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | auth_provider_sync_history        | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | auth_provider_sync_history_id_seq | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | credentials_entity                | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | event_destinations                | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | execution_annotation_tags         | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | execution_annotations             | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | execution_annotations_id_seq      | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | execution_data                    | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | execution_entity                  | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | execution_entity_id_seq           | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | execution_metadata                | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | execution_metadata_temp_id_seq    | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | folder                            | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | folder_tag                        | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | insights_by_period                | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | insights_by_period_id_seq         | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | insights_metadata                 | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | insights_metadata_metaId_seq      | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | insights_raw                      | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | insights_raw_id_seq               | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | installed_nodes                   | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | installed_packages                | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | invalid_auth_token                | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | migrations                        | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | migrations_id_seq                 | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | processed_data                    | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | project                           | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | project_relation                  | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | question                          | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | question_id_seq                   | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | ressource                         | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | ressource_id_seq                  | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | role                              | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | role_id_seq                       | sequence | chessplorer | permanent   |               | 8192 bytes | 
+ public | settings                          | table    | chessplorer | permanent   | heap          | 32 kB      | 
+ public | shared_credentials                | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | shared_workflow                   | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | tag_entity                        | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | test_case_execution               | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | test_definition                   | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | test_metric                       | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | test_run                          | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | user                              | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | user_api_keys                     | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | variables                         | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | webhook_entity                    | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | workflow_entity                   | table    | chessplorer | permanent   | heap          | 16 kB      | 
+ public | workflow_history                  | table    | chessplorer | permanent   | heap          | 8192 bytes | 
+ public | workflow_statistics               | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+ public | workflows_tags                    | table    | chessplorer | permanent   | heap          | 0 bytes    | 
+(52 rows)
+

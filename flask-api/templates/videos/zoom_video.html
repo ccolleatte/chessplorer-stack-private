@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ video.titre }} – Détail vidéo{% endblock %}
+
+{% block content %}
+<h2>{{ video.titre }}</h2>
+
+<ul>
+    <li><strong>Auteur :</strong> {{ video.auteur_nom or '–' }}</li>
+    <li><strong>Langue :</strong> {{ video.langue_originale }}</li>
+    <li><strong>Date de publication :</strong> {{ video.date_publication or '–' }}</li>
+    <li><strong>Vues :</strong> {{ video.nombre_vues or 0 }}</li>
+    <li><strong>Likes :</strong> {{ video.nombre_likes or 0 }}</li>
+    <li><strong>Score utilité :</strong> {{ '%.2f'|format(video.score_utilite or 0) }}</li>
+    <li><strong>Source d’import :</strong> {{ video.source_nom or '–' }}</li>
+</ul>
+
+<p><strong>Description :</strong></p>
+<p>{{ video.description_clean or '–' }}</p>
+
+{% if video.resume_600 %}
+    <p><strong>Résumé :</strong> {{ video.resume_600 }}</p>
+{% endif %}
+
+{% if video.concepts_resume %}
+    <p><strong>Concepts associés :</strong> {{ video.concepts_resume }}</p>
+{% endif %}
+
+<p>
+    <a href="https://www.youtube.com/watch?v={{ video.youtube_id }}" target="_blank">▶️ Voir la vidéo sur YouTube</a>
+</p>
+
+<hr>
+
+<h3>Vidéos similaires (mock)</h3>
+<ul>
+    {% for vid in similar %}
+        <li>
+            <strong>{{ vid.titre }}</strong> – score : {{ '%.2f'|format(vid.score or 0) }}
+            <a href="{{ url_for('zoom_video', id=vid.id) }}">🔍 Voir</a>
+        </li>
+    {% endfor %}
+</ul>
+
+{% if not similar %}
+    <p>Aucune vidéo similaire renseignée.</p>
+{% endif %}
+
+<a href="{{ url_for('list_videos') }}" class="button secondary">← Retour à la liste</a>
+{% endblock %}

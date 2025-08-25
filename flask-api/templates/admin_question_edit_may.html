@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Modifier la question</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 2em auto; }
+    label { display: block; margin-bottom: 1em; }
+    textarea, input[type="text"], input[type="number"] {
+      width: 100%; padding: 0.5em; font-size: 1em;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    button { padding: 0.5em 1.2em; font-size: 1em; }
+  </style>
+</head>
+<body>
+
+<h1>✏️ Modifier une question</h1>
+
+<form method="post">
+  <label>Texte :
+    <textarea name="texte" required>{{ question.texte }}</textarea>
+  </label>
+
+  <label>Réponse :
+    <textarea name="reponse">{{ question.reponse or "" }}</textarea>
+  </label>
+
+  <label>Niveau min :
+    <input type="number" name="niveau_min" value="{{ question.niveau_min }}">
+  </label>
+
+  <label>Niveau max :
+    <input type="number" name="niveau_max" value="{{ question.niveau_max }}">
+  </label>
+
+  <label>Thème :
+    <input type="text" name="theme" value="{{ question.theme or '' }}">
+  </label>
+
+  <label>Sous-thème :
+    <input type="text" name="subtheme" value="{{ question.subtheme or '' }}">
+  </label>
+
+  <label>Source :
+    <input type="text" name="source" value="{{ question.source or '' }}">
+  </label>
+
+  <label>Aliases (JSON ou liste simple) :
+    <textarea name="aliases">{{ question.aliases or '' }}</textarea>
+  </label>
+
+  <fieldset>
+    <legend>Réponses par niveau :</legend>
+    <label>0–1200 :
+      <textarea name="reponses_0_1200">{{ question.reponses['0_1200'] if question.reponses and '0_1200' in question.reponses else '' }}</textarea>
+    </label>
+    <label>1200–1600 :
+      <textarea name="reponses_1200_1600">{{ question.reponses['1200_1600'] if question.reponses and '1200_1600' in question.reponses else '' }}</textarea>
+    </label>
+    <label>1600+ :
+      <textarea name="reponses_1600_plus">{{ question.reponses['1600_plus'] if question.reponses and '1600_plus' in question.reponses else '' }}</textarea>
+    </label>
+  </fieldset>
+
+  <label>Style tag (séparés par virgule) :
+    <input type="text" name="style_tag" value="{{ ','.join(question.style_tag) if question.style_tag else '' }}">
+  </label>
+
+  <label>Tonalité :
+    <input type="text" name="tonalite" value="{{ question.tonalite or '' }}">
+  </label>
+
+  <label>Validée par :
+    <input type="text" name="validated_by" value="{{ question.validated_by or '' }}">
+  </label>
+
+  <button type="submit">💾 Enregistrer</button>
+</form>
+
+<p><a href="{{ url_for('admin_question_list') }}">⬅️ Retour à la liste</a></p>
+
+</body>
+</html>

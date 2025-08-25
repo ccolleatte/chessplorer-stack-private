@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Nouvelle question</title>
+</head>
+<body>
+  <h1>➕ Ajouter une nouvelle question</h1>
+
+  <form method="post">
+    <label>Texte :<br>
+      <textarea name="texte" rows="4" cols="50" required></textarea>
+    </label><br><br>
+
+    <label>Réponse :<br>
+      <textarea name="reponse" rows="3" cols="50"></textarea>
+    </label><br><br>
+
+    <label>Niveau min : <input type="number" name="niveau_min"></label><br>
+    <label>Niveau max : <input type="number" name="niveau_max"></label><br>
+    <label>Thème : <input type="text" name="theme"></label><br>
+    <label>Sous-thème : <input type="text" name="subtheme"></label><br>
+    <label>Source : <input type="text" name="source"></label><br><br>
+
+    <label>Aliases (JSON ou liste simple) :<br>
+      <textarea name="aliases" rows="2" cols="50"></textarea>
+    </label><br><br>
+
+    <fieldset>
+      <legend>Réponses par niveau :</legend>
+      <label>0–1200 :<br>
+        <textarea name="reponses_0_1200" rows="2" cols="50"></textarea>
+      </label><br>
+      <label>1200–1600 :<br>
+        <textarea name="reponses_1200_1600" rows="2" cols="50"></textarea>
+      </label><br>
+      <label>1600+ :<br>
+        <textarea name="reponses_1600_plus" rows="2" cols="50"></textarea>
+      </label><br>
+    </fieldset><br>
+
+    <label>Style tags (séparés par virgule) :<br>
+      <input type="text" name="style_tag">
+    </label><br>
+
+    <label>Tonalité : <input type="text" name="tonalite"></label><br>
+    <label>Validée par : <input type="text" name="validated_by"></label><br><br>
+
+    <button type="submit">💾 Enregistrer</button>
+  </form>
+
+  <p><a href="{{ url_for('admin_question_list') }}">← Retour</a></p>
+</body>
+</html>

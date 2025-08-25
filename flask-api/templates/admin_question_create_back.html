@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Nouvelle question</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em auto;
+      max-width: 700px;
+      line-height: 1.5;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 1em;
+    }
+    label {
+      display: block;
+      margin-bottom: 1.2em;
+    }
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 0.5em;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    button {
+      padding: 0.6em 1.2em;
+      font-size: 1rem;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    a {
+      display: inline-block;
+      margin-top: 1em;
+      text-decoration: none;
+      color: #007BFF;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>➕ Ajouter une nouvelle question</h1>
+  <form method="post">
+    <label>
+      Texte de la question :
+      <textarea name="texte" required></textarea>
+    </label>
+
+    <label>
+      Niveau minimum :
+      <input type="number" name="niveau_min" required>
+    </label>
+
+    <label>
+      Niveau maximum :
+      <input type="number" name="niveau_max" required>
+    </label>
+
+    <label>
+      Thème :
+      <input type="text" name="theme">
+    </label>
+
+    <label>
+      Source :
+      <input type="text" name="source">
+    </label>
+
+    <label>
+      Réponse (facultative) :
+      <textarea name="reponse"></textarea>
+    </label>
+
+    <button type="submit">💾 Enregistrer</button>
+  </form>
+
+  <p><a href="/admin/questions">⬅️ Retour à la liste</a></p>
+</body>
+</html>

@@ -1,0 +1,274 @@
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      - /root/chessplorer/front:/app/front
+    depends_on:
+      - n8n
+
+  postgres:
+    image: postgres:15
+    container_name: chessplorer-postgres
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_USER: chessplorer
+      POSTGRES_PASSWORD: securepass
+      POSTGRES_DB: chessdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chessplorer -d chessdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: chessplorer-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  n8n:
+    image: n8nio/n8n
+    container_name: chessplorer-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=chessplorer-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=chessdb
+      - DB_POSTGRESDB_USER=chessplorer
+      - DB_POSTGRESDB_PASSWORD=securepass
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=adminpass
+      - N8N_ENCRYPTION_KEY=ntYQJt4UNT6eDOPdZN3yyFEzlfmQtJbA
+      - N8N_EDITOR_BASE_URL=https://n8n.chessplorer.com
+      - WEBHOOK_URL=https://n8n.chessplorer.com
+      - GENERIC_TIMEZONE=Europe/Paris
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5678', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+#  flowise:
+#    image: flowiseai/flowise
+#    container_name: chessplorer-flowise
+#    restart: unless-stopped
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      - DATABASE_PATH=/root/.flowise
+#      - APIKEY_PATH=/root/.flowise
+#      - SECRETKEY_PATH=/root/.flowise
+#      - LOG_LEVEL=info
+#      - DEBUG=false
+#      - PORT=3000
+#    volumes:
+#      - flowise_data:/root/.flowise
+#    depends_on:
+#      - postgres
+#    healthcheck:
+#      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+
+  uptime-kuma:
+    image: louislam/uptime-kuma
+    container_name: chessplorer-uptime
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime_data:/app/data
+    restart: always
+
+  flask-api:
+    build:
+      context: ./flask-api
+    container_name: chessplorer-flask-api
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      DB_NAME: chessdb
+      DB_USER: chessplorer
+      DB_PASS: securepass
+      DB_HOST: postgres
+    volumes:
+      - ./flask-api:/app
+    depends_on:
+      - postgres
+
+  videos-ui:
+    build:
+      context: ./videos-interface
+    container_name: chessplorer-videos-ui
+    restart: unless-stopped
+    ports:
+      - "5050:8000"
+
+  nextcloud:
+    image: nextcloud:27-apache
+    container_name: chessplorer-nextcloud
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - nextcloud_data:/var/lib/nextcloud
+    environment:
+      - POSTGRES_PASSWORD=securepass
+      - POSTGRES_DB=chessdb
+      - POSTGRES_USER=chessplorer
+      - POSTGRES_HOST=postgres
+    depends_on:
+      - postgres
+
+
+  # Service Mem0 v3 Streamlit (remplace mem0-api et mem0-ui)
+  # Services Supabase restaurés
+  supabase-db:
+    image: postgres:15
+    container_name: chessplorer-supabase-db
+    ports:
+      - "5433:5432"  # Port différent du PostgreSQL principal
+    restart: always
+    environment:
+      POSTGRES_USER: supabase_auth_admin
+      POSTGRES_PASSWORD: supabase_auth_password
+      POSTGRES_DB: postgres
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+    command: 
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+
+  supabase-auth:
+    image: supabase/gotrue:v2.143.0
+    container_name: chessplorer-supabase-auth
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:supabase_auth_password@supabase-db:5432/postgres
+      GOTRUE_SITE_URL: https://supabase.chessplorer.com
+      GOTRUE_URI_ALLOW_LIST: https://supabase.chessplorer.com
+      GOTRUE_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      API_EXTERNAL_URL: https://supabase.chessplorer.com
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.1
+    container_name: chessplorer-supabase-rest
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://supabase_auth_admin:supabase_auth_password@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    command:
+      - "/bin/postgrest"
+
+  supabase-studio:
+    image: supabase/studio:latest
+    container_name: chessplorer-supabase-studio
+    restart: unless-stopped
+    ports:
+      - "54321:3000"  # Interface Supabase Studio
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: supabase_auth_password
+      DEFAULT_ORGANIZATION_NAME: Chessplorer
+      DEFAULT_PROJECT_NAME: Chessplorer RAG
+      SUPABASE_URL: https://supabase.chessplorer.com
+      SUPABASE_REST_URL: http://supabase-rest:3000
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoZXNzcGxvcmVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzEwMjg4MDAsImV4cCI6MTk4NjYwNDgwMH0.example
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoZXNzcGxvcmVyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY3MTAyODgwMCwiZXhwIjoxOTg2NjA0ODAwfQ.example
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"] 
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s  # Délai pour le démarrage
+
+  mem0-streamlit:
+    container_name: chessplorer-mem0-streamlit
+    build:
+      context: ./mem0
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MODEL_CHOICE=${MODEL_CHOICE:-gpt-4o-mini}
+      
+      # Supabase Configuration
+      - DATABASE_URL=postgresql://supabase_auth_admin:supabase_auth_password@supabase-db:5432/postgres
+      - SUPABASE_URL=${SUPABASE_URL:-http://supabase-rest:3000}
+      - SUPABASE_KEY=${SUPABASE_SERVICE_KEY}
+    depends_on:
+      - postgres
+      - supabase-db
+      - supabase-auth
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.75.0
+    container_name: chessplorer-supabase-meta
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: supabase-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: supabase_auth_admin
+      PG_META_DB_PASSWORD: supabase_auth_password
+
+volumes:
+  pgdata:
+  qdrant_data:
+  uptime_data:
+  caddy_data:
+  caddy_config:
+  nextcloud_data:
+  flowise_data:
+  supabase_db_data:

@@ -1,0 +1,137 @@
+n8n.chessplorer.com {
+    reverse_proxy chessplorer-n8n:5678
+}
+
+monitoring.chessplorer.com {
+    reverse_proxy chessplorer-uptime:3001
+}
+
+qdrant.chessplorer.com {
+    reverse_proxy chessplorer-qdrant:6333
+}
+
+front.chessplorer.com {
+    route {
+        basic_auth / {
+            cyrilsen $2a$14$0sKI3lSFGamKII4q3Ntfi.JltTdZdF6ac2pKITuSATZl1tHhd9goC
+        }
+        reverse_proxy chessplorer-flask-api:5000
+    }
+}
+
+api.chessplorer.com {
+    route {
+        basic_auth / {
+            cyrilsen $2a$14$0sKI3lSFGamKII4q3Ntfi.JltTdZdF6ac2pKITuSATZl1tHhd9goC
+        }
+        reverse_proxy chessplorer-flask-api:5000
+    }
+}
+
+nextcloud.chessplorer.com {
+    reverse_proxy chessplorer-nextcloud:80
+    encode gzip
+    header {
+        Strict-Transport-Security "max-age=15552000; includeSubDomains; preload"
+        Referrer-Policy "no-referrer"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+    }
+    file_server
+}
+
+videos.chessplorer.com {
+    reverse_proxy chessplorer-flask-api:5000
+}
+
+# SUPABASE - Routage avec gestion CORS et redirections
+supabase.chessplorer.com {
+    encode gzip
+
+    # CORS preflight (OPTIONS) - réponse vide 204
+    @cors_preflight method OPTIONS
+    respond @cors_preflight 204
+
+    # Headers CORS et de sécurité pour toutes les réponses
+    header * {
+        Access-Control-Allow-Origin "https://chessplorer.com"
+        Access-Control-Allow-Methods "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+        Access-Control-Allow-Headers "Authorization,Content-Type,X-Supabase-Auth,apikey,x-client-info"
+        Access-Control-Allow-Credentials "true"
+        Access-Control-Max-Age "86400"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        -Server
+    }
+
+    route {
+        # 1) Chemins canoniques (versionnés)
+        handle_path /auth/v1/* {
+            reverse_proxy chessplorer-supabase-auth:9999
+        }
+        handle_path /rest/v1/* {
+            reverse_proxy chessplorer-supabase-rest:3000
+        }
+        # (Décommenter en cas de déploiement du service Supabase Storage)
+        # handle_path /storage/v1/* {
+        #     reverse_proxy chessplorer-supabase-storage:5000
+        # }
+
+        # 2) Redirections 308 depuis les anciens chemins (sans /v1)
+        @auth_legacy {
+            path /auth/*
+            not path /auth/v1*
+        }
+        handle @auth_legacy {
+            @auth_legacy_re path_regexp auth_legacy ^/auth/(.*)$
+            redir 308 /auth/v1/{http.regexp.auth_legacy.1}
+        }
+
+        @rest_legacy {
+            path /rest/*
+            not path /rest/v1*
+        }
+        handle @rest_legacy {
+            @rest_legacy_re path_regexp rest_legacy ^/rest/(.*)$
+            redir 308 /rest/v1/{http.regexp.rest_legacy.1}
+        }
+
+        # 3) Meta (postgres-meta)
+        handle_path /meta/* {
+            reverse_proxy chessplorer-supabase-meta:8080
+        }
+        handle_path /pg-meta/* {
+            reverse_proxy chessplorer-supabase-meta:8080
+        }
+
+        # 4) Défaut : Studio
+        handle {
+            reverse_proxy chessplorer-supabase-studio:3000 {
+                header_up Host {host}
+                header_up X-Real-IP {remote}
+                header_up X-Forwarded-For {remote}
+                header_up X-Forwarded-Proto {scheme}
+                health_path /
+                health_interval 30s
+                health_timeout 10s
+            }
+        }
+    }
+}
+
+flowise.chessplorer.com {
+    reverse_proxy chessplorer-flowise:3000
+}
+
+# MEM0 - Simple et direct
+mem0.chessplorer.com {
+    reverse_proxy chessplorer-mem0-cole-medin:8501
+
+    header {
+        Cache-Control "no-cache, no-store, must-revalidate"
+        Pragma "no-cache"
+        Expires "0"
+    }
+}

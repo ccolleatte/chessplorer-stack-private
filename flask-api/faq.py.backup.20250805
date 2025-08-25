@@ -1,0 +1,450 @@
+# flask-api/faq.py 
+# Version adaptée à votre système existant (/admin/questions/*)
+# Utilise vos templates et URLs existants
+
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, flash, session
+import psycopg2.extras
+import json
+import re
+from datetime import datetime
+import logging
+from functools import wraps
+import hashlib
+import time
+import secrets
+
+# Blueprint avec vos URLs existantes
+faq_bp = Blueprint('faq_bp', __name__, template_folder='templates')
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ========================================
+# VALIDATION ADAPTÉE À VOS CHAMPS
+# ========================================
+
+class QuestionValidator:
+    """Validateur pour vos champs existants"""
+    
+    VALID_THEMES = [
+        'Débutants', 'Intermédiaires', 'Avancés', 'Tactiques', 'Finales',
+        'Ouvertures', 'Stratégie', 'Psychologie', 'Ressources', 'Général'
+    ]
+    
+    @staticmethod
+    def validate_question_data(data: dict) -> dict:
+        """Validation adaptée à votre structure existante"""
+        errors = []
+        validated = {}
+        
+        # Texte (votre champ principal)
+        texte = data.get('texte', '').strip()
+        if not texte:
+            errors.append('Texte de la question obligatoire')
+        elif len(texte) < 10:
+            errors.append('Question trop courte (minimum 10 caractères)')
+        else:
+            validated['texte'] = texte
+            
+        # Réponse
+        reponse = data.get('reponse', '').strip()
+        validated['reponse'] = reponse if reponse else None
+        
+        # Niveaux
+        try:
+            niveau_min = int(data.get('niveau_min') or 0)
+            niveau_max = int(data.get('niveau_max') or 2000)
+            validated['niveau_min'] = niveau_min
+            validated['niveau_max'] = niveau_max
+        except (ValueError, TypeError):
+            errors.append('Niveaux doivent être des entiers')
+            
+        # Champs texte optionnels
+        validated['theme'] = data.get('theme', '').strip() or None
+        validated['subtheme'] = data.get('subtheme', '').strip() or None
+        validated['source'] = data.get('source', '').strip() or None
+        validated['tonalite'] = data.get('tonalite', '').strip() or None
+        validated['validated_by'] = data.get('validated_by', '').strip() or None
+        validated['aliases'] = data.get('aliases', '').strip() or None
+        
+        # Réponses par niveau (JSON)
+        reponses = {}
+        for niveau in ['0_1200', '1200_1600', '1600_plus']:
+            field_name = f'reponses_{niveau}'
+            value = data.get(field_name, '').strip()
+            if value:
+                reponses[niveau] = value
+        validated['reponses'] = reponses if reponses else None
+        
+        # Style tags (liste)
+        style_tag_str = data.get('style_tag', '').strip()
+        if style_tag_str:
+            validated['style_tag'] = [tag.strip() for tag in style_tag_str.split(',') if tag.strip()]
+        else:
+            validated['style_tag'] = None
+            
+        return {
+            'valid': len(errors) == 0,
+            'errors': errors,
+            'data': validated
+        }
+
+# Décorateurs de sécurité (simplifiés pour votre usage)
+def require_csrf():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Version simplifiée - adaptez selon votre système d'auth
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def get_db_connection():
+    """Utilise votre connexion DB existante"""
+    import os
+    return psycopg2.connect(
+        dbname=os.getenv("DB_NAME", "chessdb"),
+        user=os.getenv("DB_USER", "chessplorer"),
+        password=os.getenv("DB_PASS", "securepass"),
+        host=os.getenv("DB_HOST", "postgres"),
+        port=os.getenv("DB_PORT", 5432)
+    )
+
+# ========================================
+# 🎯 ROUTES ADAPTÉES À VOS URLs EXISTANTES
+# ========================================
+
+@faq_bp.route('/admin/questions')
+def admin_questions():
+    """Liste des questions - utilise votre template existant"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Requête adaptée à votre structure existante
+        cur.execute("""
+            SELECT 
+                id, texte, reponse, niveau_min, niveau_max, 
+                theme, subtheme, source, tonalite, validated_by,
+                aliases, reponses, style_tag, created_at,
+                -- Comptage des aliases si c'est une colonne
+                CASE 
+                    WHEN aliases IS NOT NULL AND aliases != '' THEN 1 
+                    ELSE 0 
+                END as aliases_count
+            FROM question 
+            WHERE texte IS NOT NULL
+            ORDER BY created_at DESC
+        """)
+        
+        questions = []
+        for row in cur.fetchall():
+            question = dict(row)
+            
+            # Parsing JSON fields si nécessaire
+            if question['reponses'] and isinstance(question['reponses'], str):
+                try:
+                    question['reponses'] = json.loads(question['reponses'])
+                except:
+                    question['reponses'] = {}
+            
+            if question['style_tag'] and isinstance(question['style_tag'], str):
+                try:
+                    question['style_tag'] = json.loads(question['style_tag'])
+                except:
+                    question['style_tag'] = []
+                    
+            questions.append(question)
+        
+        cur.close()
+        conn.close()
+        
+        # Utilise votre template existant
+        return render_template('admin_question_list.html', questions=questions)
+        
+    except Exception as e:
+        logger.error(f"Erreur liste questions: {e}")
+        flash('Erreur lors du chargement des questions', 'error')
+        return render_template('admin_question_list.html', questions=[])
+
+@faq_bp.route('/admin/questions/new', methods=['GET', 'POST'])
+@require_csrf()
+def admin_questions_new():
+    """Création question - utilise votre template existant"""
+    if request.method == 'POST':
+        validation = QuestionValidator.validate_question_data(request.form)
+        
+        if not validation['valid']:
+            for error in validation['errors']:
+                flash(error, 'error')
+            return render_template('admin_question_create.html')
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        try:
+            data = validation['data']
+            
+            # INSERT adapté à votre structure de table
+            cur.execute("""
+                INSERT INTO question (
+                    texte, reponse, niveau_min, niveau_max, theme, subtheme, 
+                    source, tonalite, validated_by, aliases, reponses, style_tag,
+                    created_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                data['texte'],
+                data['reponse'],
+                data['niveau_min'],
+                data['niveau_max'],
+                data['theme'],
+                data['subtheme'],
+                data['source'],
+                data['tonalite'],
+                data['validated_by'],
+                data['aliases'],
+                json.dumps(data['reponses']) if data['reponses'] else None,
+                json.dumps(data['style_tag']) if data['style_tag'] else None,
+                datetime.now()
+            ))
+            
+            question_id = cur.fetchone()[0]
+            conn.commit()
+            
+            logger.info(f"Question créée avec succès: ID {question_id}")
+            flash('Question créée avec succès', 'success')
+            
+            return redirect(url_for('faq_bp.admin_questions'))
+            
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Erreur création question: {e}")
+            flash('Erreur lors de la création', 'error')
+        finally:
+            cur.close()
+            conn.close()
+
+    # Utilise votre template existant
+    return render_template('admin_question_create.html')
+
+@faq_bp.route('/admin/questions/<int:id>/edit', methods=['GET', 'POST'])
+@require_csrf()
+def admin_questions_edit(id):
+    """Édition question - utilise votre template existant"""
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    if request.method == 'POST':
+        validation = QuestionValidator.validate_question_data(request.form)
+        
+        if not validation['valid']:
+            for error in validation['errors']:
+                flash(error, 'error')
+            # Récupération question pour réaffichage
+            cur.execute("SELECT * FROM question WHERE id = %s", (id,))
+            question = cur.fetchone()
+            return render_template('admin_question_edit.html', question=question)
+        
+        try:
+            data = validation['data']
+            
+            # UPDATE adapté à votre structure
+            cur.execute("""
+                UPDATE question SET
+                    texte = %s, reponse = %s, niveau_min = %s, niveau_max = %s,
+                    theme = %s, subtheme = %s, source = %s, tonalite = %s,
+                    validated_by = %s, aliases = %s, reponses = %s, style_tag = %s,
+                    updated_at = %s
+                WHERE id = %s
+            """, (
+                data['texte'], data['reponse'], data['niveau_min'], data['niveau_max'],
+                data['theme'], data['subtheme'], data['source'], data['tonalite'],
+                data['validated_by'], data['aliases'],
+                json.dumps(data['reponses']) if data['reponses'] else None,
+                json.dumps(data['style_tag']) if data['style_tag'] else None,
+                datetime.now(), id
+            ))
+            
+            conn.commit()
+            flash('Question mise à jour avec succès', 'success')
+            return redirect(url_for('faq_bp.admin_questions'))
+            
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Erreur mise à jour question {id}: {e}")
+            flash('Erreur lors de la mise à jour', 'error')
+        finally:
+            cur.close()
+            conn.close()
+
+    # GET - Récupération pour édition
+    cur.execute("SELECT * FROM question WHERE id = %s", (id,))
+    question = cur.fetchone()
+    
+    if not question:
+        flash('Question non trouvée', 'error')
+        return redirect(url_for('faq_bp.admin_questions'))
+    
+    # Parsing des champs JSON pour l'affichage
+    question = dict(question)
+    if question['reponses'] and isinstance(question['reponses'], str):
+        try:
+            question['reponses'] = json.loads(question['reponses'])
+        except:
+            question['reponses'] = {}
+    
+    if question['style_tag'] and isinstance(question['style_tag'], str):
+        try:
+            question['style_tag'] = json.loads(question['style_tag'])
+        except:
+            question['style_tag'] = []
+    
+    cur.close()
+    conn.close()
+    
+    # Utilise votre template existant
+    return render_template('admin_question_edit.html', question=question)
+
+@faq_bp.route('/admin/questions/<int:id>/delete', methods=['POST'])
+def admin_questions_delete(id):
+    """Suppression question"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    try:
+        # Soft delete ou hard delete selon votre préférence
+        cur.execute("DELETE FROM question WHERE id = %s", (id,))
+        conn.commit()
+        
+        flash('Question supprimée avec succès', 'success')
+        logger.info(f"Question {id} supprimée")
+        
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Erreur suppression question {id}: {e}")
+        flash('Erreur lors de la suppression', 'error')
+    finally:
+        cur.close()
+        conn.close()
+    
+    return redirect(url_for('faq_bp.admin_questions'))
+
+# ========================================
+# 🔌 API POUR WORDPRESS (vos URLs existantes)
+# ========================================
+
+@faq_bp.route('/api/chat/faq')
+def api_chat_faq():
+    """API FAQ pour WordPress - compatible avec votre structure"""
+    user_message = request.args.get('message', '')
+    user_level = int(request.args.get('level', 1000))
+    user_id = request.args.get('user_id', 'anonymous')
+    
+    if not user_message:
+        return jsonify({'error': 'Message requis'}), 400
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        # Recherche dans votre structure existante
+        cur.execute("""
+            SELECT id, texte, reponse, theme, niveau_min, niveau_max, reponses
+            FROM question 
+            WHERE 
+                texte ILIKE %s 
+                AND %s >= niveau_min 
+                AND %s <= niveau_max
+                AND reponse IS NOT NULL
+            ORDER BY 
+                CASE WHEN theme IN ('Débutants', 'Tactiques', 'Finales') THEN 1 ELSE 2 END,
+                LENGTH(reponse) DESC
+            LIMIT 3
+        """, (f'%{user_message}%', user_level, user_level))
+        
+        results = cur.fetchall()
+        
+        if not results:
+            return jsonify({
+                'success': True,
+                'answer': 'Je n\'ai pas trouvé de réponse spécifique. Pouvez-vous reformuler votre question ?',
+                'sources': [],
+                'confidence': 0
+            })
+        
+        # Utilise la meilleure réponse trouvée
+        best_result = results[0]
+        
+        # Sélection réponse par niveau
+        answer = best_result['reponse']
+        if best_result['reponses']:
+            try:
+                reponses_json = json.loads(best_result['reponses']) if isinstance(best_result['reponses'], str) else best_result['reponses']
+                if user_level <= 1200 and '0_1200' in reponses_json:
+                    answer = reponses_json['0_1200']
+                elif user_level <= 1600 and '1200_1600' in reponses_json:
+                    answer = reponses_json['1200_1600'] 
+                elif '1600_plus' in reponses_json:
+                    answer = reponses_json['1600_plus']
+            except:
+                pass  # Garde la réponse générale
+        
+        response = {
+            'success': True,
+            'answer': answer,
+            'sources': [result['texte'] for result in results],
+            'confidence': len(results) / 3.0,
+            'user_level': user_level,
+            'faq_id': best_result['id']
+        }
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"Erreur API chat FAQ: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Erreur lors de la recherche'
+        }), 500
+
+# ========================================
+# 🏥 HEALTH CHECK
+# ========================================
+
+@faq_bp.route('/api/questions/health')
+def api_questions_health():
+    """Diagnostic système questions"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Test basic
+        cur.execute("SELECT COUNT(*) FROM question")
+        total_questions = cur.fetchone()[0]
+        
+        # Test questions avec réponses
+        cur.execute("SELECT COUNT(*) FROM question WHERE reponse IS NOT NULL AND reponse != ''")
+        questions_with_answers = cur.fetchone()[0]
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'stats': {
+                'total_questions': total_questions,
+                'questions_with_answers': questions_with_answers,
+                'coverage': round(questions_with_answers / max(total_questions, 1) * 100, 1)
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 500

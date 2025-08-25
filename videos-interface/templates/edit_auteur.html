@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier un auteur – Chessplorer{% endblock %}
+
+{% block content %}
+<h2>Modifier l’auteur</h2>
+
+<form method="post">
+    <div class="row">
+        <div class="col-sm-12">
+            <label for="nom">Nom de l’auteur</label>
+            <input type="text" id="nom" name="nom" value="{{ auteur.nom }}" required>
+        </div>
+
+        <div class="col-sm-12">
+            <label for="score_moyen">Score moyen</label>
+            <input type="number" id="score_moyen" name="score_moyen" step="0.01" min="0" value="{{ auteur.score_moyen or 0 }}">
+        </div>
+    </div>
+
+    <input type="submit" value="Enregistrer les modifications">
+    <a href="{{ url_for('list_auteurs') }}" class="button secondary">Annuler</a>
+</form>
+{% endblock %}

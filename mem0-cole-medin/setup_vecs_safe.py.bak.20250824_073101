@@ -1,0 +1,60 @@
+import os, time, psycopg2
+
+def conn_params():
+    url=os.getenv("DATABASE_URL")
+    if url: return {"dsn":url}
+    h=os.getenv("PGHOST", os.getenv("PG_HOST","chessplorer-supabase-db"))
+    p=int(os.getenv("PGPORT", os.getenv("PG_PORT","5432")))
+    d=os.getenv("PGDATABASE", os.getenv("PG_DATABASE","postgres"))
+    u=os.getenv("PGUSER", os.getenv("PG_USER","supabase_auth_admin"))
+    pw=os.getenv("PGPASSWORD", os.getenv("PG_PASSWORD","securepass"))
+    return {"host":h,"port":p,"database":d,"user":u,"password":pw}
+
+def get_conn(timeout=5):
+    k=conn_params()
+    if "dsn" in k:
+        return psycopg2.connect(k["dsn"], connect_timeout=timeout, options='-c sslmode=disable')
+    return psycopg2.connect(connect_timeout=timeout, options='-c sslmode=disable', **k)
+
+def wait_for_postgres(max_attempts=30):
+    for i in range(max_attempts):
+        try:
+            get_conn(timeout=2).close()
+            print("✅ PostgreSQL prêt")
+            return True
+        except psycopg2.OperationalError:
+            print(f"⏳ Attente PostgreSQL... ({i+1}/{max_attempts})")
+            time.sleep(2)
+    print("❌ Timeout PostgreSQL"); return False
+
+def ensure_vecs_tables():
+    try:
+        if not wait_for_postgres(): return False
+        conn=get_conn(timeout=5); cur=conn.cursor()
+        print("🔧 Vérification tables vecs...")
+        cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        cur.execute("CREATE SCHEMA IF NOT EXISTS vecs;")
+        cur.execute("""CREATE TABLE IF NOT EXISTS vecs._meta (key TEXT PRIMARY KEY, value TEXT);""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS vecs.collections (
+            name TEXT PRIMARY KEY, dimension INTEGER NOT NULL, is_index_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW());""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS vecs.memories (
+            id BIGSERIAL PRIMARY KEY, vec vector(1536), metadata JSONB);""")
+        cur.execute("""CREATE INDEX IF NOT EXISTS memories_vec_idx ON vecs.memories USING hnsw (vec vector_cosine_ops);""")
+        cur.execute("""INSERT INTO vecs._meta (key,value) VALUES ('version','0.4.5'),('created_at',NOW()::TEXT)
+                       ON CONFLICT (key) DO NOTHING;""")
+        cur.execute("""INSERT INTO vecs.collections (name,dimension) VALUES ('memories',1536)
+                       ON CONFLICT (name) DO NOTHING;""")
+        cur.execute("""GRANT ALL ON SCHEMA vecs TO supabase_auth_admin;
+                       GRANT ALL ON ALL TABLES IN SCHEMA vecs TO supabase_auth_admin;
+                       GRANT ALL ON ALL SEQUENCES IN SCHEMA vecs TO supabase_auth_admin;
+                       ALTER DEFAULT PRIVILEGES IN SCHEMA vecs GRANT ALL ON TABLES TO supabase_auth_admin;
+                       ALTER DEFAULT PRIVILEGES IN SCHEMA vecs GRANT ALL ON SEQUENCES TO supabase_auth_admin;""")
+        conn.commit(); cur.close(); conn.close()
+        print("✅ Tables vecs OK"); return True
+    except Exception as e:
+        print(f"❌ Erreur setup vecs: {e}"); return False
+
+if __name__=="__main__":
+    if not ensure_vecs_tables(): print("❌ Échec initialisation vecs"); exit(1)
+    print("🎉 Vecs initialisé avec succès")
